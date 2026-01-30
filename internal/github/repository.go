@@ -1,11 +1,17 @@
 package github
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
-const themesURL = "https://api.github.com/repos/ohmyzsh/ohmyzsh/contents/themes"
+const baseURL = "https://api.github.com/repos/ohmyzsh/ohmyzsh/contents/"
+const themesURL = baseURL + "themes"
+const pluginsURL = baseURL + "plugins"
 
 type Repository interface {
 	ListThemes(ctx context.Context) ([]string, error)
+	ListPlugins(ctx context.Context) ([]string, error)
 }
 
 type repository struct {
@@ -30,10 +36,28 @@ func (r *repository) ListThemes(ctx context.Context) ([]string, error) {
 
 	var themes []string
 	for _, item := range items {
+		fmt.Println("Item: ", item)
 		if item.Type == "file" {
 			themes = append(themes, item.Name)
 		}
 	}
 
 	return themes, nil
+}
+
+func (r *repository) ListPlugins(ctx context.Context) ([]string, error) {
+	var items []contentItem
+
+	if err := r.client.Get(ctx, pluginsURL, &items); err != nil {
+		return nil, err
+	}
+
+	var plugins []string
+	for _, item := range items {
+		if item.Type == "dir" {
+			plugins = append(plugins, item.Name)
+		}
+	}
+
+	return plugins, nil
 }
